@@ -39,31 +39,6 @@ public class WklSubgraphConditionVerifierForEdgeList {
         System.out.println(violatesWklSubgraphConditionForHamiltonianPaths(exampleN, exampleEdgeList, exampleEdgeCount, exampleBottlenecks, exampleK, exampleMedals, exampleL, exampleLanyards, exampleLanyardVertexCount));
     }
 
-    int minIndexInEdgeList(int u, int[][] edgeList, int edgeCount) {
-        int low = 0;
-        int high = edgeCount - 1;
-        int mid, leftVertex;
-        int minIndex = -1;
-        while (low <= high) {
-            mid = (low + high) / 2;
-            leftVertex = edgeList[mid][0];
-            if (u == leftVertex) {
-                // Vertex found
-                minIndex = mid;
-                // Search left
-                high = mid - 1;
-            } else if (u < leftVertex) {
-                // Search left
-                high = mid - 1;
-            } else {
-                // Search right
-                low = mid + 1;
-            }
-        }
-        // Return smallest index
-        return minIndex;
-    }
-
     byte compareEdges(int u, int v, int x, int y) {
         if (u < x) {
             return -1;
@@ -107,30 +82,18 @@ public class WklSubgraphConditionVerifierForEdgeList {
         return -1;
     }
 
-    int nextNeighbor(int n, int[][] edgeList, int edgeCount, int u, int[] previousNeighborAndIndex) {
-        int v = previousNeighborAndIndex[0];
+    int nextNeighbor(int n, int[][] edgeList, int edgeCount, int u, int previousNeighbor) {
+        // Binary search every vertex to find neighbors
+        int v = previousNeighbor;
         int edgeIndex;
-        if (u > v) {
-            // Binary search each vertex to look for neighbors
-            do {
-                v++;
+        do {
+            v++;
+            if (u < v) {
                 edgeIndex = binarySearchEdge(u, v, edgeList, edgeCount);
-            } while (u > v && edgeIndex < 0);
-        }
-        edgeIndex = previousNeighborAndIndex[1];
-        if (u <= v) {
-            // Go through the next edges consecutively
-            if (edgeIndex < 0 || edgeIndex >= edgeCount || u != edgeList[edgeIndex][0]) {
-                // No more consecutive edges
-                v = n;
             } else {
-                // Next consecutive edge
-                v = edgeList[edgeIndex][1];
-                edgeIndex++;
+                edgeIndex = binarySearchEdge(v, u, edgeList, edgeCount);
             }
-        }
-        previousNeighborAndIndex[0] = v;
-        previousNeighborAndIndex[1] = edgeIndex;
+        } while (v < n && edgeIndex < 0);
         return v;
     }
 
@@ -148,9 +111,8 @@ public class WklSubgraphConditionVerifierForEdgeList {
 
         // Go through all neighbors of u
         int v = -1;
-        int[] previousNeighborAndIndex = new int[]{v, minIndexInEdgeList(u, edgeList, edgeCount)};
         while (v < n) {
-            v = nextNeighbor(n, edgeList, edgeCount, u, previousNeighborAndIndex); // v is current neighbor of u
+            v = nextNeighbor(n, edgeList, edgeCount, u, v); // v is current neighbor of u
             if (v == n) {
                 return;
             }
@@ -251,14 +213,11 @@ public class WklSubgraphConditionVerifierForEdgeList {
         visited[vertex] = true;
         queue.add(vertex);
         int current, neighbor;
-        int[] previousNeighborAndIndex = new int[2];
         while(!queue.isEmpty()) {
             current = queue.poll();
             neighbor = -1;
-            previousNeighborAndIndex[0] = neighbor;
-            previousNeighborAndIndex[1] = minIndexInEdgeList(current, edgeList, edgeCount);
             while (neighbor < n) {
-                neighbor = nextNeighbor(n, edgeList, edgeCount, current, previousNeighborAndIndex);
+                neighbor = nextNeighbor(n, edgeList, edgeCount, current, neighbor);
                 if (neighbor < n && !visited[neighbor]) {
                     visited[neighbor] = true;
                     queue.add(neighbor);
