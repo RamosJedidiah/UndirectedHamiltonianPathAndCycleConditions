@@ -85,12 +85,12 @@ public class WklSubgraphConditionVerifierForEdgeList {
     int nextNeighbor(int n, int[][] edgeList, int edgeCount, int u, int previousNeighbor) {
         // Binary search every vertex to find neighbors
         int v = previousNeighbor;
-        int edgeIndex;
+        int edgeIndex = -1;
         do {
             v++;
             if (u < v) {
                 edgeIndex = binarySearchEdge(u, v, edgeList, edgeCount);
-            } else {
+            } else if (u > v) {
                 edgeIndex = binarySearchEdge(v, u, edgeList, edgeCount);
             }
         } while (v < n && edgeIndex < 0);
