@@ -309,6 +309,9 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
                         BCC1ofVertex[BCCvertex] = i;
                     } else if (BCC2ofVertex[BCCvertex] < 0) {
                         BCC2ofVertex[BCCvertex] = i;
+                    } else {
+                        System.out.println("All W_k,l subgraph conditions are violated because vertex " + BCCvertex + " has criticality at least 3");
+                        return true;
                     }
                 }
             }
