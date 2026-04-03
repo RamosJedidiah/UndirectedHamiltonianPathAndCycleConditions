@@ -294,7 +294,7 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
             return true;
         }
         // Otherwise, check if an intersecting biconnected component intersects with at least 2 biconnected components
-        // Get external biconnected component indices of articulation points
+        // Get external biconnected component indices of each vertex
         int[] BCC1ofVertex = new int[n];
         int[] BCC2ofVertex = new int[n];
         for (i = 0; i < n; i++) {
