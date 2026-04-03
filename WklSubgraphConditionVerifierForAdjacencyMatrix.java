@@ -38,21 +38,6 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
         System.out.println(violatesWklSubgraphConditionForHamiltonianPaths(exampleAdjacencyMatrix, exampleN, exampleBottlenecks, exampleK, exampleMedals, exampleL, exampleLanyards, exampleLanyardVertexCount));
     }
 
-    int collectEdge(LinkedList<int[]> stack, LinkedList<int[]> temp, boolean[] BCCchecklist) {
-        int newVertexCount = 0;
-        int[] edge = stack.pop();
-        temp.push(edge);
-        if (!BCCchecklist[edge[0]]) {
-            BCCchecklist[edge[0]] = true;
-            newVertexCount++;
-        }
-        if (!BCCchecklist[edge[1]]) {
-            BCCchecklist[edge[1]] = true;
-            newVertexCount++;
-        }
-        return newVertexCount;
-    }
-
     // A recursive function that finds biconnected components using depth-first search traversal
     // u --> The vertex to be visited next
     // discoveryTime[] --> Stores discovery times of visited vertices
