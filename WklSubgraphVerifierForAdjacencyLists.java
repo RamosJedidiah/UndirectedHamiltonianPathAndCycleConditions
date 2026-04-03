@@ -1,3 +1,5 @@
+// This code does not find W_k,l subgraphs. It verifies W_k,l subgraphs.
+
 public class WklSubgraphVerifierForAdjacencyLists {
     boolean inChecklist(int item, int[] checklist, int checkMark, int n) {
         // Check if item is in checklist
