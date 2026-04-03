@@ -285,23 +285,22 @@ public class WklSubgraphConditionVerifierForEdgeList {
         int vertexOutsideSubgraph;
         boolean[] inIntersectingBCC = new boolean[n];
         LinkedList<Integer> intersectingBCCindices = new LinkedList<>();
-        LinkedList<Integer> externalBCCindices = new LinkedList<>();
+        boolean[] isExternalBCC = new boolean[BCCcount];
         for (i = 0; i < BCCcount; i++) {
             BCC = BCCs[i];
             vertexInsideSubgraph = -1;
             vertexOutsideSubgraph = -1;
             for (int BCCvertex : BCC) {
                 if (WklChecklist[BCCvertex] == -1) {
+                    // Biconnected component is not contained in the subgraph
                     vertexOutsideSubgraph = BCCvertex;
-                    if (externalBCCindices.isEmpty() || externalBCCindices.getLast() != i) {
-                        // Biconnected component is not contained in the subgraph
-                        externalBCCindices.add(i);
-                    }
+                    isExternalBCC[i] = true;
                 } else {
+                    // Biconnected component intersects with the subgraph
                     vertexInsideSubgraph = BCCvertex;
                 }
                 if (vertexInsideSubgraph >= 0 && vertexOutsideSubgraph >= 0) {
-                    // Biconnected component intersects with the subgraph
+                    // Biconnected component is not contained in the subgraph and intersects with the subgraph
                     intersectingBCCcount++;
                     inIntersectingBCC[vertexOutsideSubgraph] = true;
                     intersectingBCCindices.add(i);
@@ -344,49 +343,48 @@ public class WklSubgraphConditionVerifierForEdgeList {
             return true;
         }
         // Otherwise, check if an intersecting biconnected component intersects with at least 2 biconnected components
+        // Get external biconnected component indices of articulation points
+        int[] BCC1ofVertex = new int[n];
+        int[] BCC2ofVertex = new int[n];
         for (i = 0; i < n; i++) {
-            inIntersectingBCC[i] = false;
+            BCC1ofVertex[i] = -1;
+            BCC2ofVertex[i] = -1;
         }
-        for (int x : intersectingBCCindices) {
-            // Mark all vertices in the xth biconnected component
-            BCC = BCCs[x];
-            for (int BCCvertex : BCC) {
-                inIntersectingBCC[BCCvertex] = true;
-            }
-            // Go through all other biconnected components not contained in the subgraph
-            intersectingBCCcount = 0;
-            for (int y : externalBCCindices) {
-                if (x != y) {
-                    BCC = BCCs[y];
-                    vertexInsideSubgraph = -1;
-                    vertexOutsideSubgraph = -1;
-                    for (int BCCvertex : BCC) {
-                        if (inIntersectingBCC[BCCvertex]) {
-                            // Vertex inside the intersecting biconnected component
-                            vertexInsideSubgraph = 0;
-                            if (WklChecklist[BCCvertex] == -1) {
-                                // Vertex is also outside the subgraph
-                                vertexOutsideSubgraph = 0;
-                            }
-                        } else if (WklChecklist[BCCvertex] == -1) {
-                            // Vertex outside the intersecting biconnected component and outside the subgraph
-                            vertexOutsideSubgraph = 0;
-                        }
-                        if (vertexInsideSubgraph == 0 && vertexOutsideSubgraph == 0) {
-                            intersectingBCCcount++;
-                            if (intersectingBCCcount >= 2) {
-                                System.out.println("The W_k,k subgraph condition is violated because the subgraph intersects with a biconnected component that intersects with at least 2 biconnected components");
-                                return true;
-                            }
-                            break;
-                        }
+        for (i = 0; i < BCCcount; i++) {
+            if (isExternalBCC[i]) {
+                BCC = BCCs[i];
+                for (int BCCvertex : BCC) {
+                    if (BCC1ofVertex[BCCvertex] < 0) {
+                        BCC1ofVertex[BCCvertex] = i;
+                    } else if (BCC2ofVertex[BCCvertex] < 0) {
+                        BCC2ofVertex[BCCvertex] = i;
                     }
                 }
             }
-            // Unmark all vertices in the xth biconnected component
-            BCC = BCCs[x];
+        }
+        int intersectingBCCindex, BCCindex;
+        for (int j : intersectingBCCindices) {
+            BCC = BCCs[j];
+            intersectingBCCindex = -1;
             for (int BCCvertex : BCC) {
-                inIntersectingBCC[BCCvertex] = false;
+                BCCindex = BCC1ofVertex[BCCvertex];
+                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex]) {
+                    if (intersectingBCCindex < 0) {
+                        intersectingBCCindex = BCCindex;
+                    } else {
+                        System.out.println("The W_k,k subgraph condition is violated because the subgraph intersects with a biconnected component that intersects with at least 2 biconnected components");
+                        return true;
+                    }
+                }
+                BCCindex = BCC2ofVertex[BCCvertex];
+                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex]) {
+                    if (intersectingBCCindex < 0) {
+                        intersectingBCCindex = BCCindex;
+                    } else {
+                        System.out.println("The W_k,k subgraph condition is violated because the subgraph intersects with a biconnected component that intersects with at least 2 biconnected components");
+                        return true;
+                    }
+                }
             }
         }
         System.out.println("No W_k,l subgraph condition violations found");
