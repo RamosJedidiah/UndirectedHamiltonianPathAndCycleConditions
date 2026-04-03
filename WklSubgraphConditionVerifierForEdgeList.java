@@ -134,7 +134,7 @@ public class WklSubgraphConditionVerifierForEdgeList {
 
                 // If u is an articulation point, pop all edges from stack
                 if ((discoveryTime[u] == 1 && children > 1) || (discoveryTime[u] > 1 && low[v] >= discoveryTime[u])) {
-                    // Collect only necessary edges
+                    // Collect edges
                     int[] edge;
                     while (stack.peek()[0] != u || stack.peek()[1] != v) {
                         edge = stack.pop();
@@ -169,7 +169,7 @@ public class WklSubgraphConditionVerifierForEdgeList {
     }
 
     // The function to do depth-first search traversal using biconnectedComponent()
-    int getBiconnectedComponents(int n, int[][] edgeList, int edgeCount, int[][] BCCs) {
+    int getBiconnectedComponents(int n, int[][] edgeList, int edgeCount, int[][] BCCs, boolean[] BCCchecklist) {
         int[] discoveryTime = new int[n];
         int[] low = new int[n];
         int[] parent = new int[n];
@@ -205,7 +205,29 @@ public class WklSubgraphConditionVerifierForEdgeList {
                 timeAndBCCcount[1]++; // BCC count++
             }
         }
-        return timeAndBCCcount[1]; // return BCC count
+
+        // Remove duplicate vertices from biconnected components
+        BCCcount = timeAndBCCcount[1];
+        for (i = 0; i < BCCcount; i++) {
+            j = 0; // BCC vertex count
+            for (int vertex : BCCs[i]) {
+                if (!BCCchecklist[vertex]) {
+                    BCCchecklist[vertex] = true;
+                    j++;
+                }
+            }
+            BCC = new int[j];
+            j = 0;
+            for (int vertex : BCCs[i]) {
+                if (BCCchecklist[vertex]) {
+                    BCCchecklist[vertex] = false;
+                    BCC[j] = vertex;
+                    j++;
+                }
+            }
+            BCCs[i] = BCC;
+        }
+        return BCCcount; // return BCC count
     }
     // This code is contributed by Aakash Hasija
 
@@ -237,6 +259,7 @@ public class WklSubgraphConditionVerifierForEdgeList {
             return false;
         }
         int[] WklChecklist = new int[n];
+        int i;
         if (!subgraphVerifier.isWklSubgraph(n, edgeList, edgeCount, bottlenecks, k, medals, l, lanyards, lanyardVertexCount, WklChecklist)) {
             System.out.println("Invalid W_k,l subgraph");
             return false;
@@ -251,10 +274,10 @@ public class WklSubgraphConditionVerifierForEdgeList {
             }
         }
         // Otherwise, k >= l
-        int i;
         // Get biconnected components
         int[][] BCCs = new int[n][];
-        int BCCcount = getBiconnectedComponents(n, edgeList, edgeCount, BCCs);
+        boolean[] visited = new boolean[n];
+        int BCCcount = getBiconnectedComponents(n, edgeList, edgeCount, BCCs, visited);
         // Count intersecting biconnected components
         int intersectingBCCcount = 0;
         int[] BCC;
@@ -291,7 +314,6 @@ public class WklSubgraphConditionVerifierForEdgeList {
             return false;
         }
         // Mark all vertices in the subgraph so that breadth-first search must find paths outside the subgraph
-        boolean[] visited = new boolean[n];
         for (i = 0; i < n; i++) {
             if (WklChecklist[i] != -1) {
                 visited[i] = true;
