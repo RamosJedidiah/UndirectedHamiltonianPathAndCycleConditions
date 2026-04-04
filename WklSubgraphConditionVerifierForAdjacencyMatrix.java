@@ -1,7 +1,7 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-// This code does not find violations. It verifies violations.
+// This code is not for finding violations. It is for verifying violations.
 
 public class WklSubgraphConditionVerifierForAdjacencyMatrix {
     public WklSubgraphConditionVerifierForAdjacencyMatrix() {
