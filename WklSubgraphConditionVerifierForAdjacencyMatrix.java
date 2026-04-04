@@ -322,7 +322,7 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
             intersectingBCCindex = -1;
             for (int BCCvertex : BCC) {
                 BCCindex = BCC1ofVertex[BCCvertex];
-                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex]) {
+                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex] && intersectingBCCindex != BCCindex) {
                     if (intersectingBCCindex < 0) {
                         intersectingBCCindex = BCCindex;
                     } else {
@@ -331,7 +331,7 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
                     }
                 }
                 BCCindex = BCC2ofVertex[BCCvertex];
-                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex]) {
+                if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex] && intersectingBCCindex != BCCindex) {
                     if (intersectingBCCindex < 0) {
                         intersectingBCCindex = BCCindex;
                     } else {
