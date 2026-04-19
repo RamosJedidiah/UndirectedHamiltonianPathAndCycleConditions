@@ -422,12 +422,12 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         int[] BCC;
         boolean intersecting;
         LinkedList<Integer> intersectingBCCindices = new LinkedList<>();
-        int[] BCC1ofVertex = new int[n];
-        int[] BCC2ofVertex = new int[n];
+        int[] BCC1of = new int[n];
+        int[] BCC2of = new int[n];
         int i;
         for (i = 0; i < n; i++) {
-            BCC1ofVertex[i] = -1;
-            BCC2ofVertex[i] = -1;
+            BCC1of[i] = -1;
+            BCC2of[i] = -1;
         }
         for (i = 0; i < BCCcount; i++) {
             BCC = BCCs[i];
@@ -441,12 +441,12 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                     intersecting = true;
                     intersectingBCCindices.add(i);
                 }
-                if (BCC1ofVertex[BCCvertex] < 0) {
+                if (BCC1of[BCCvertex] < 0) {
                     // Vertex is in the ith biconnected component
-                    BCC1ofVertex[BCCvertex] = i;
-                } else if (BCC2ofVertex[BCCvertex] < 0) {
+                    BCC1of[BCCvertex] = i;
+                } else if (BCC2of[BCCvertex] < 0) {
                     // Vertex is also in the ith biconnected component
-                    BCC2ofVertex[BCCvertex] = i;
+                    BCC2of[BCCvertex] = i;
                 } else {
                     // Vertex is shared by at least 3 biconnected components
                     System.out.println("All W_k,l subgraph conditions are violated because vertex " + BCCvertex + " has criticality at least 3");
@@ -466,7 +466,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             // Check all vertices in the current biconnected component
             for (int BCCvertex : BCC) {
                 // Check which external biconnected components contain the current vertex
-                BCCindex = BCC1ofVertex[BCCvertex];
+                BCCindex = BCC1of[BCCvertex];
                 if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex] && intersectingBCCindex != BCCindex) {
                     if (intersectingBCCindex < 0) {
                         intersectingBCCindex = BCCindex;
@@ -475,7 +475,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                         return true;
                     }
                 }
-                BCCindex = BCC2ofVertex[BCCvertex];
+                BCCindex = BCC2of[BCCvertex];
                 if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex] && intersectingBCCindex != BCCindex) {
                     if (intersectingBCCindex < 0) {
                         intersectingBCCindex = BCCindex;
