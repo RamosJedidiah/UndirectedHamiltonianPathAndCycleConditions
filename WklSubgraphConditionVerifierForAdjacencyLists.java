@@ -17,24 +17,214 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         };
         int exampleN = exampleAdjacencyLists.length;
 
-        int[] exampleBottlenecks = new int[]{0, 1};
-        int exampleK = exampleBottlenecks.length;
+        //                                     0   1   2  3   4   5   6   7
+        int[] exampleBottleneckOf = new int[]{-2, -2, -3, 1, -3, -1, -1, -1};
+        int exampleK = 2;
 
-        int[] exampleMedals = new int[]{2, 4};
-        int exampleL = exampleMedals.length;
+        //                               0  1  2  3  4  5  6  7
+        int[] exampleMedalOf = new int[]{0, 0, 0, 4, 0, 0, 0, 0};
+        int exampleL = 2;
 
-        int[][] exampleLanyards = new int[][]{
-            new int[]{}, // L_0,2
-            new int[]{}, // L_0,4
-            new int[]{}, // L_1,2
-            new int[]{3} // L_1,4
-        };
-        int exampleLanyardVertexCount = 0;
-        for (int[] exampleLanyard : exampleLanyards) {
-            exampleLanyardVertexCount += exampleLanyard.length;
+        System.out.println(violatesWkkSubgraphConditionForHamiltonianPaths(exampleAdjacencyLists, exampleN, exampleK, exampleL, exampleBottleneckOf, exampleMedalOf));
+    }
+
+    boolean areValidAdjacencyLists(int[][] adjacencyLists, int n, boolean[] checklist) {
+        if (n < 1) {
+            System.out.println("n should not be less than 1");
+            return false;
         }
+        if (adjacencyLists == null) {
+            System.out.println("Adjacency lists are null");
+            return false;
+        }
+        if (adjacencyLists.length < n) {
+            System.out.println("There are less than " + n + " adjacency lists");
+            return false;
+        }
+        // Transpose the graph to check symmetry
+        LinkedList<Integer>[] transposed = new LinkedList[n];
+        int vertex, previousNeighbor, neighborIndex;
+        for (vertex = 0; vertex < n; vertex++) {
+            transposed[vertex] = new LinkedList<>();
+        }
+        int[] adjacencyList;
+        for (vertex = 0; vertex < n; vertex++) {
+            adjacencyList = adjacencyLists[vertex];
+            if (adjacencyList == null) {
+                // Invalid input
+                return false;
+            }
+            previousNeighbor = -1; // Previous neighbor in the adjacency list
+            for (int neighbor : adjacencyList) {
+                if (vertex == neighbor) {
+                    System.out.println("Vertex " + vertex + " has an edge to itself");
+                    return false;
+                }
+                if (neighbor < 0 || neighbor >= n) {
+                    System.out.println("Vertex " + vertex + " has neighbor " + neighbor + " out of range 0 to " + (n - 1));
+                    return false;
+                }
+                if (previousNeighbor > neighbor) {
+                    System.out.println("Adjacency list of vertex " + vertex + " is unsorted");
+                    return false;
+                }
+                // For edge (u, v), add edge (v, u) in the transposed graph
+                transposed[neighbor].add(vertex);
+                // Update the previous neighbor in the adjacency list
+                previousNeighbor = neighbor;
+                if (checklist[neighbor]) {
+                    System.out.println("Vertex " + vertex + " has duplicate neighbor " + neighbor);
+                    return false;
+                }
+                checklist[neighbor] = true;
+            }
+            // Clear checklist
+            for (int neighbor : adjacencyList) {
+                checklist[neighbor] = false;
+            }
+        }
+        // Ensure the graph is symmetric
+        LinkedList<Integer> transposedAdjacencyList;
+        for (vertex = 0; vertex < n; vertex++) {
+            adjacencyList = adjacencyLists[vertex];
+            transposedAdjacencyList = transposed[vertex];
+            if (adjacencyList.length != transposedAdjacencyList.size()) {
+                System.out.println("The graph is asymmetric");
+                return false;
+            }
+            neighborIndex = 0;
+            for (int neighbor : transposedAdjacencyList) {
+                if (adjacencyList[neighborIndex] != neighbor) {
+                    System.out.println("The graph is asymmetric");
+                    return false;
+                }
+                neighborIndex++;
+            }
+        }
+        // Adjacency lists represent a valid graph
+        return true;
+    }
 
-        System.out.println(violatesWklSubgraphConditionForHamiltonianPaths(exampleAdjacencyLists, exampleN, exampleBottlenecks, exampleK, exampleMedals, exampleL, exampleLanyards, exampleLanyardVertexCount));
+    // This code is not for finding W_k,l subgraphs. It is for verifying W_k,l subgraphs.
+    boolean isWklSubgraph(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
+        // n vertices in the graph, k bottleneck vertices, l medal vertices
+        if (bottleneckOf == null || medalOf == null) {
+            System.out.println("An array is null");
+            return false;
+        }
+        if (bottleneckOf.length < n || medalOf.length < n) {
+            System.out.println("An array is too short");
+            return false;
+        }
+        if (k < 1) {
+            System.out.println("k should not be less than 1");
+            return false;
+        }
+        if (l < 0) {
+            System.out.println("l should not be less than 0");
+            return false;
+        }
+        int i, endpoint;
+        // Count bottleneck vertices and medal vertices
+        int bottleneckVertexCount = 0;
+        int medalVertexCount = 0;
+        for (i = 0; i < n; i++) {
+            if (bottleneckOf[i] < -3) {
+                System.out.println("Vertex " + i + " should be assigned as either a bottleneck vertex, a medal vertex, a lanyard vertex, or a vertex outside the subgraph");
+                return false;
+            }
+            if (bottleneckOf[i] == -2) {
+                // Vertex i is a bottleneck vertex
+                bottleneckVertexCount++;
+            } else if (bottleneckOf[i] == -3) {
+                // Vertex i is a medal vertex
+                medalVertexCount++;
+            } else if (bottleneckOf[i] >= 0) {
+                // Vertex i is a lanyard vertex
+                endpoint = bottleneckOf[i];
+                if (endpoint >= n) {
+                    System.out.println("Bottleneck vertex " + endpoint + " of lanyard vertex " + i + " is out of range 0 to " + (n - 1));
+                    return false;
+                }
+                if (bottleneckOf[endpoint] != -2) {
+                    System.out.println("Endpoint " + endpoint + " of lanyard vertex " + i + " is not a bottleneck vertex");
+                    return false;
+                }
+                endpoint = medalOf[i];
+                if (endpoint < 0 || endpoint >= n) {
+                    System.out.println("Medal vertex " + endpoint + " of lanyard vertex " + i + " is out of range 0 to " + (n - 1));
+                    return false;
+                }
+                if (bottleneckOf[endpoint] != -3) {
+                    System.out.println("Endpoint " + endpoint + " of lanyard vertex " + i + " is not a medal vertex");
+                    return false;
+                }
+            }
+        }
+        if (bottleneckVertexCount != k) {
+            System.out.println("There should be exactly k bottleneck vertices");
+            return false;
+        }
+        if (medalVertexCount != l) {
+            System.out.println("There should be exactly l medal vertices");
+        }
+        int[] adjacencyList;
+        for (i = 0; i < n; i++) {
+            adjacencyList = adjacencyLists[i];
+            for (int j : adjacencyList) {
+                if (bottleneckOf[i] == -3) {
+                    // Vertex i is a medal vertex
+                    // Ensure medal vertices are an independent set with neighbors only in the subgraph
+                    if (bottleneckOf[j] == -3) {
+                        System.out.println("Independent set of medal vertices should not have edge (" + i + ", " + j + ")");
+                        return false;
+                    }
+                    if (bottleneckOf[j] == -1) {
+                        System.out.println("Medal vertex " + i + " has neighbor vertex " + j + " outside the subgraph");
+                        return false;
+                    }
+                } else if (bottleneckOf[i] >= 0) {
+                    // Vertex i is a lanyard vertex
+                    // Ensure lanyard vertices have neighbors only in their own lanyards and endpoints
+                    if (bottleneckOf[j] == -1) {
+                        System.out.println("Lanyard vertex " + i + " has neighbor vertex " + j + " outside the subgraph");
+                        return false;
+                    }
+                    if (bottleneckOf[j] == -2 && bottleneckOf[i] != j) {
+                        System.out.println("Lanyard vertex " + i + " has neighbor bottleneck vertex " + j + " outside lanyard L_" + bottleneckOf[i] + "," + medalOf[i]);
+                        return false;
+                    }
+                    if (bottleneckOf[j] == -3 && medalOf[i] != j) {
+                        System.out.println("Lanyard vertex " + i + " has neighbor medal vertex " + j + " outside lanyard L_" + bottleneckOf[i] + "," + medalOf[i]);
+                        return false;
+                    }
+                    // Otherwise, vertex j is also a lanyard vertex
+                    if (bottleneckOf[j] >= 0 && (bottleneckOf[i] != bottleneckOf[j] || medalOf[i] != medalOf[j])) {
+                        System.out.println("Lanyard vertex " + i + " has neighbor lanyard vertex " + j + " outside lanyard L_" + bottleneckOf[i] + "," + medalOf[i]);
+                        return false;
+                    }
+                }
+            }
+        }
+        // Passed all checks
+        return true;
+    }
+
+    void breadthFirstSearch(int[][] adjacencyLists, int vertex, boolean[] visited, Queue<Integer> queue) {
+        visited[vertex] = true;
+        queue.add(vertex);
+        int current;
+        int[] adjacencyList;
+        while(!queue.isEmpty()) {
+            current = queue.poll();
+            adjacencyList = adjacencyLists[current];
+            for (int neighbor : adjacencyList) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    queue.add(neighbor);
+                }
+            }
+        }
     }
 
     // A recursive function that finds biconnected components using depth-first search traversal
@@ -167,148 +357,115 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
     }
     // This code is contributed by Aakash Hasija
 
-    void breadthFirstSearch(int[][] adjacencyLists, int vertex, boolean[] visited, Queue<Integer> queue) {
-        visited[vertex] = true;
-        queue.add(vertex);
-        int current;
-        int[] adjacencyList;
-        while(!queue.isEmpty()) {
-            current = queue.poll();
-            adjacencyList = adjacencyLists[current];
-            for (int neighbor : adjacencyList) {
-                if (!visited[neighbor]) {
-                    visited[neighbor] = true;
-                    queue.add(neighbor);
-                }
-            }
-        }
-    }
-
-    boolean violatesWklSubgraphConditionForHamiltonianPaths(int[][] adjacencyLists, int n, int[] bottlenecks, int k, int[] medals, int l, int[][] lanyards, int lanyardVertexCount) {
-        if (k >= l && k != l && l != k - 1) {
-            System.out.println("Checking only accounts for W_k,l subgraphs where k < l or W_k,k and W_k,k-1 subgraphs");
-            return false;
-        }
-        WklSubgraphVerifierForAdjacencyLists subgraphVerifier = new WklSubgraphVerifierForAdjacencyLists();
-        int[] WklChecklist = new int[n];
-        int i;
-        for (i = 0; i < n; i++) {
-            WklChecklist[i] = -1;
-        }
-        if (!subgraphVerifier.areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
+    boolean violatesWklSubgraphCondition(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf, int s) {
+        boolean[] visited = new boolean[n];
+        if (!areValidAdjacencyLists(adjacencyLists, n, visited)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
-        if (!subgraphVerifier.isWklSubgraph(adjacencyLists, n, bottlenecks, k, medals, l, lanyards, lanyardVertexCount, WklChecklist)) {
+        if (!isWklSubgraph(adjacencyLists, n, k, l, bottleneckOf, medalOf)) {
             System.out.println("Invalid W_k,l subgraph");
             return false;
         }
-        if (k < l) {
-            if (k + l + lanyardVertexCount < n) {
-                System.out.println("The W_k,l subgraph condition, where k < l, is violated because there are vertices outside the subgraph");
-                return true;
-            } else {
-                System.out.println("The W_k,l subgraph condition, where k < l, is NOT violated because there are no vertices outside the subgraph");
-                return false;
-            }
+        if (l - k >= s) {
+            System.out.println("The W_k,l subgraph condition, where l - k >= " + s + ", is violated because there is a W_k,l subgraph where l - k >= " + s);
+            return true;
         }
-        // Otherwise, k >= l
-        // Get biconnected components
-        int[][] BCCs = new int[n][];
-        boolean[] visited = new boolean[n];
-        int BCCcount = getBiconnectedComponents(adjacencyLists, n, BCCs, visited);
-        // Count intersecting biconnected components
-        int intersectingBCCcount = 0;
-        int[] BCC;
-        int vertexInsideSubgraph;
-        int vertexOutsideSubgraph;
-        boolean[] inIntersectingBCC = new boolean[n];
-        LinkedList<Integer> intersectingBCCindices = new LinkedList<>();
-        boolean[] isExternalBCC = new boolean[BCCcount];
-        for (i = 0; i < BCCcount; i++) {
-            BCC = BCCs[i];
-            vertexInsideSubgraph = -1;
-            vertexOutsideSubgraph = -1;
-            for (int BCCvertex : BCC) {
-                if (WklChecklist[BCCvertex] == -1) {
-                    // Biconnected component is not contained in the subgraph
-                    vertexOutsideSubgraph = BCCvertex;
-                    isExternalBCC[i] = true;
-                } else {
-                    // Biconnected component intersects with the subgraph
-                    vertexInsideSubgraph = BCCvertex;
-                }
-                if (vertexInsideSubgraph >= 0 && vertexOutsideSubgraph >= 0) {
-                    // Biconnected component is not contained in the subgraph and intersects with the subgraph
-                    intersectingBCCcount++;
-                    inIntersectingBCC[vertexOutsideSubgraph] = true;
-                    intersectingBCCindices.add(i);
-                    break;
-                }
-            }
-        }
-        if (intersectingBCCcount == 0 || (l == k - 1 && intersectingBCCcount < 3)) {
-            System.out.println("Not enough intersecting biconnected components");
-            return false;
-        }
+        // Otherwise, k - l >= 1 - s
         // Mark all vertices in the subgraph so that breadth-first search must find paths outside the subgraph
+        int i;
         for (i = 0; i < n; i++) {
-            if (WklChecklist[i] != -1) {
+            if (bottleneckOf[i] != -1) {
                 visited[i] = true;
             }
         }
-        // Count biconnected components not connected to each other outside the subgraph
-        int disconnectedBCCcount = 0;
+        // Count subgraphs not connected to each other outside the subgraph
+        int disconnectedSubgraphCount = k - l + s;
         Queue<Integer> queue = new LinkedList<>();
         for (i = 0; i < n; i++) {
-            if (inIntersectingBCC[i] && !visited[i]) {
-                // Vertex i in an intersecting biconnected component is not yet visited by breadth-first search
-                disconnectedBCCcount++;
+            if (!visited[i]) {
+                // Vertex in an externally disconnected subgraph is not yet visited by breadth-first search
+                disconnectedSubgraphCount--;
+                if (disconnectedSubgraphCount == 0) {
+                    System.out.println("The W_k,l subgraph condition, where k - l >= " + (1 - s) + ", is violated because the subgraph intersects with at least k - l + " + s + " externally disconnected subgraphs");
+                    return true;
+                }
                 breadthFirstSearch(adjacencyLists, i, visited, queue);
             }
         }
-        if (l == k - 1) {
-            if (disconnectedBCCcount >= 3) {
-                System.out.println("The W_k,k-1 subgraph condition is violated because the subgraph intersects with at least 3 externally disconnected biconnected components");
-                return true;
-            } else {
-                System.out.println("The W_k,k-1 subgraph condition is NOT violated because the subgraph intersects with less than 3 externally disconnected biconnected components");
-                return false;
-            }
+        System.out.println("No W_k,l subgraph condition violations found");
+        return false;
+    }
+
+    boolean violatesWklSubgraphConditionForHamiltonianPaths(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
+        return violatesWklSubgraphCondition(adjacencyLists, n, k, l, bottleneckOf, medalOf, 2);
+    }
+
+    boolean violatesWkkSubgraphConditionForHamiltonianPaths(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
+        if (k != l) {
+            System.out.println("Checking only accounts for W_k,k subgraphs");
+            return false;
         }
-        // Otherwise, k == l
-        if (disconnectedBCCcount >= 2) {
-            System.out.println("The W_k,k subgraph condition is violated because the subgraph intersects with at least 2 externally disconnected biconnected components");
-            return true;
+        boolean[] isExternalBCC = new boolean[n];
+        if (!areValidAdjacencyLists(adjacencyLists, n, isExternalBCC)) {
+            System.out.println("Invalid adjacency lists");
+            return false;
         }
-        // Otherwise, check if an intersecting biconnected component intersects with at least 2 biconnected components
-        // Get external biconnected component indices of each vertex
+        if (!isWklSubgraph(adjacencyLists, n, k, l, bottleneckOf, medalOf)) {
+            System.out.println("Invalid W_k,l subgraph");
+            return false;
+        }
+        // Get biconnected components
+        int[][] BCCs = new int[n][];
+        int BCCcount = getBiconnectedComponents(adjacencyLists, n, BCCs, isExternalBCC);
+        // Mark biconnected components not contained in the subgraph, intersecting with the subgraph, and biconnected component indices of each vertex
+        int[] BCC;
+        boolean intersecting;
+        LinkedList<Integer> intersectingBCCindices = new LinkedList<>();
         int[] BCC1ofVertex = new int[n];
         int[] BCC2ofVertex = new int[n];
+        int i;
         for (i = 0; i < n; i++) {
             BCC1ofVertex[i] = -1;
             BCC2ofVertex[i] = -1;
         }
         for (i = 0; i < BCCcount; i++) {
-            if (isExternalBCC[i]) {
-                BCC = BCCs[i];
-                for (int BCCvertex : BCC) {
-                    if (BCC1ofVertex[BCCvertex] < 0) {
-                        BCC1ofVertex[BCCvertex] = i;
-                    } else if (BCC2ofVertex[BCCvertex] < 0) {
-                        BCC2ofVertex[BCCvertex] = i;
-                    } else {
-                        System.out.println("All W_k,l subgraph conditions are violated because vertex " + BCCvertex + " has criticality at least 3");
-                        return true;
-                    }
+            BCC = BCCs[i];
+            intersecting = false;
+            for (int BCCvertex : BCC) {
+                if (bottleneckOf[BCCvertex] == -1) {
+                    // Biconnected component is not contained in the subgraph
+                    isExternalBCC[i] = true;
+                } else if (!intersecting) {
+                    // Biconnected component intersects with the subgraph
+                    intersecting = true;
+                    intersectingBCCindices.add(i);
+                }
+                if (BCC1ofVertex[BCCvertex] < 0) {
+                    // Vertex is in the ith biconnected component
+                    BCC1ofVertex[BCCvertex] = i;
+                } else if (BCC2ofVertex[BCCvertex] < 0) {
+                    // Vertex is also in the ith biconnected component
+                    BCC2ofVertex[BCCvertex] = i;
+                } else {
+                    // Vertex is shared by at least 3 biconnected components
+                    System.out.println("All W_k,l subgraph conditions are violated because vertex " + BCCvertex + " has criticality at least 3");
+                    return true;
                 }
             }
         }
+        if (intersectingBCCindices.isEmpty()) {
+            System.out.println("The W_k,k subgraph condition is not violated because the subgraph does not intersect with any biconnected component");
+            return false;
+        }
+        // Check if an intersecting biconnected component intersects with at least 2 external biconnected components
         int intersectingBCCindex, BCCindex;
         for (int j : intersectingBCCindices) {
             BCC = BCCs[j];
             intersectingBCCindex = -1;
+            // Check all vertices in the current biconnected component
             for (int BCCvertex : BCC) {
+                // Check which external biconnected components contain the current vertex
                 BCCindex = BCC1ofVertex[BCCvertex];
                 if (BCCindex >= 0 && BCCindex != j && isExternalBCC[BCCindex] && intersectingBCCindex != BCCindex) {
                     if (intersectingBCCindex < 0) {
@@ -333,113 +490,64 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         return false;
     }
 
-    boolean has3W11Subgraphs(int[][] adjacencyLists, int n, int[] threeBottlenecks, int[] threeMedals, int[][] threeLanyards) {
-        if (threeBottlenecks.length < 3) {
-            System.out.println("Not enough bottleneck vertices");
-            return false;
-        }
-        if (threeMedals.length < 3) {
-            System.out.println("Not enough medal vertices");
-            return false;
-        }
-        if (threeLanyards.length < 3) {
-            System.out.println("Not enough lanyards");
-            return false;
-        }
-        WklSubgraphVerifierForAdjacencyLists subgraphVerifier = new WklSubgraphVerifierForAdjacencyLists();
-        int[] WklChecklist = new int[n];
-        int i, j;
-        for (i = 0; i < n; i++) {
-            WklChecklist[i] = -1;
-        }
-        if (!subgraphVerifier.areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
+    boolean has3W11Subgraphs(int[][] adjacencyLists, int n, int[] bottlenecks1of, int[] bottlenecks2of, int[] bottlenecks3of, int[] medals1of, int[] medals2of, int[] medals3of) {
+        boolean[] WklChecklist = new boolean[n];
+        if (!areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
         // Verify 3 subgraphs
-        int[] bottlenecks = new int[1];
-        int[] medals = new int[1];
-        int[][] lanyards = new int[1][];
+        int[][] bottlenecksOf = new int[][]{bottlenecks1of, bottlenecks2of, bottlenecks3of};
+        int[][] medalsOf = new int[][]{medals1of, medals2of, medals3of};
+        int i, j;
         for (i = 0; i < 3; i++) {
-            bottlenecks[0] = threeBottlenecks[i];
-            medals[0] = threeMedals[i];
-            lanyards[0] = threeLanyards[i];
-            if (!subgraphVerifier.isWklSubgraph(adjacencyLists, n, bottlenecks, 1, medals, 1, lanyards, threeLanyards[i].length, WklChecklist)) {
+            if (!isWklSubgraph(adjacencyLists, n, 1, 1, bottlenecksOf[i], medalsOf[i])) {
                 System.out.println(i + "th subgraph is not a W_1,1 subgraph");
                 return false;
             }
-            for (j = 0; j < n; j++) {
-                WklChecklist[j] = -1;
-            }
         }
         // Ensure 3 subgraphs do not share medal vertices and lanyard vertices
-        int[] lanyard;
         for (i = 0; i < 3; i++) {
-            if (subgraphVerifier.inChecklist(threeMedals[i], WklChecklist, 0, n)) {
-                System.out.println("Medal vertex " + threeMedals[i] + " is shared by the W_1,1 subgraphs");
-                return false;
-            }
-            lanyard = threeLanyards[i];
-            for (int lanyardVertex : lanyard) {
-                if (subgraphVerifier.inChecklist(lanyardVertex, WklChecklist, 0, n)) {
-                    System.out.println("Lanyard vertex " + lanyardVertex + " is shared by the W_1,1 subgraphs");
-                    return false;
+            for (j = 0; j < n; j++) {
+                if (WklChecklist[j]) {
+                    if (bottlenecksOf[i][j] == -3) {
+                        System.out.println("Medal vertex " + j + " is shared by the W_1,1 subgraphs");
+                        return false;
+                    }
+                    if (bottlenecksOf[i][j] >= 0) {
+                        System.out.println("Lanyard vertex " + j + " is shared by the W_1,1 subgraphs");
+                        return false;
+                    }
                 }
+                WklChecklist[j] = true;
             }
         }
         System.out.println("3 W_1,1 subgraphs found");
         return true;
     }
 
-    boolean violatesWklSubgraphConditionForHamiltonianCycles(int[][] adjacencyLists, int n, int[] bottlenecks, int k, int[] medals, int l, int[][] lanyards, int lanyardVertexCount) {
-        if (k > l) {
-            System.out.println("Checking does not account for W_k,l subgraphs where k > l");
-            return false;
-        }
-        WklSubgraphVerifierForAdjacencyLists subgraphVerifier = new WklSubgraphVerifierForAdjacencyLists();
-        int[] WklChecklist = new int[n];
-        for (int i = 0; i < n; i++) {
-            WklChecklist[i] = -1;
-        }
-        if (!subgraphVerifier.areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
-            System.out.println("Invalid adjacency lists");
-            return false;
-        }
-        if (!subgraphVerifier.isWklSubgraph(adjacencyLists, n, bottlenecks, k, medals, l, lanyards, lanyardVertexCount, WklChecklist)) {
-            System.out.println("Invalid W_k,l subgraph");
-            return false;
-        }
-        if (k < l) {
-            System.out.println("The W_k,l subgraph condition, where k < l, is violated because there is a W_k,l subgraph where k < l");
-            return true;
-        }
-        // Otherwise, k == l
-        if (k + l + lanyardVertexCount < n) {
-            System.out.println("The W_k,k subgraph condition is violated because there are vertices outside the subgraph");
-            return true;
-        } else {
-            System.out.println("The W_k,k subgraph condition is NOT violated because there are no vertices outside the subgraph");
-            return false;
-        }
+    boolean violatesWklSubgraphConditionForHamiltonianCycles(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
+        return violatesWklSubgraphCondition(adjacencyLists, n, k, l, bottleneckOf, medalOf, 1);
     }
 
-    boolean hasW11Subgraph(int[][] adjacencyLists, int n, int bottleneck, int medal, int[] lanyard) {
-        WklSubgraphVerifierForAdjacencyLists subgraphVerifier = new WklSubgraphVerifierForAdjacencyLists();
-        int[] WklChecklist = new int[n];
-        for (int i = 0; i < n; i++) {
-            WklChecklist[i] = -1;
-        }
-        if (!subgraphVerifier.areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
+    boolean hasW11SubgraphAndVerticesOutside(int[][] adjacencyLists, int n, int[] bottleneckOf, int[] medalOf) {
+        boolean[] WklChecklist = new boolean[n];
+        if (!areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
-        int[][] lanyards = new int[1][];
-        lanyards[0] = lanyard;
-        if (!subgraphVerifier.isWklSubgraph(adjacencyLists, n, new int[]{bottleneck}, 1, new int[]{medal}, 1, lanyards, lanyard.length, WklChecklist)) {
+        if (!isWklSubgraph(adjacencyLists, n, 1, 1, bottleneckOf, medalOf)) {
             System.out.println("Invalid W_1,1 subgraph");
             return false;
         }
-        System.out.println("W_1,1 subgraph found");
-        return true;
+        // Find a vertex outside the subgraph
+        for (int i = 0; i < n; i++) {
+            if (bottleneckOf[i] == -1) {
+                System.out.println("W_1,1 subgraph and vertices outside the subgraph found");
+                return true;
+            }
+        }
+        System.out.println("W_1,1 subgraph found without vertices outside the subgraph");
+        return false;
     }
 }
