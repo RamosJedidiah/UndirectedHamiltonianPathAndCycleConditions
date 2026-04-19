@@ -357,7 +357,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
     }
     // This code is contributed by Aakash Hasija
 
-    boolean violatesWklSubgraphCondition(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf, int s) {
+    boolean violatesWklSubgraphCondition(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf, int c) {
         boolean[] visited = new boolean[n];
         if (!areValidAdjacencyLists(adjacencyLists, n, visited)) {
             System.out.println("Invalid adjacency lists");
@@ -367,27 +367,27 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             System.out.println("Invalid W_k,l subgraph");
             return false;
         }
-        if (l - k >= s) {
-            System.out.println("The W_k,l subgraph condition, where l - k >= " + s + ", is violated because there is a W_k,l subgraph where l - k >= " + s);
+        if (l - k >= c) {
+            System.out.println("The W_k,l subgraph condition, where l - k >= " + c + ", is violated because there is a W_k,l subgraph where l - k >= " + c);
             return true;
         }
-        // Otherwise, k - l >= 1 - s
-        // Mark all vertices in the subgraph so that breadth-first search must find paths outside the subgraph
+        // Otherwise, k - l >= 1 - c
+        // Mark all vertices in the W_k,l subgraph so that breadth-first search must find paths outside the W_k,l subgraph
         int i;
         for (i = 0; i < n; i++) {
             if (bottleneckOf[i] != -1) {
                 visited[i] = true;
             }
         }
-        // Count subgraphs not connected to each other outside the subgraph
-        int disconnectedSubgraphCount = k - l + s;
+        // Count subgraphs not connected to each other outside the W_k,l subgraph
+        int disconnectedSubgraphCount = k - l + c;
         Queue<Integer> queue = new LinkedList<>();
         for (i = 0; i < n; i++) {
             if (!visited[i]) {
                 // Vertex in an externally disconnected subgraph is not yet visited by breadth-first search
                 disconnectedSubgraphCount--;
                 if (disconnectedSubgraphCount == 0) {
-                    System.out.println("The W_k,l subgraph condition, where k - l >= " + (1 - s) + ", is violated because the subgraph intersects with at least k - l + " + s + " externally disconnected subgraphs");
+                    System.out.println("The W_k,l subgraph condition, where k - l >= " + (1 - c) + ", is violated because the W_k,l subgraph intersects with at least k - l + " + c + " externally disconnected subgraphs");
                     return true;
                 }
                 breadthFirstSearch(adjacencyLists, i, visited, queue);
