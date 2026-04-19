@@ -1,3 +1,3 @@
-# Subgraphs Forbidden by Undirected Hamiltonian Paths and Cycles
+# Subgraph Conditions for Undirected Hamiltonian Paths and Cycles
 
 WIP
