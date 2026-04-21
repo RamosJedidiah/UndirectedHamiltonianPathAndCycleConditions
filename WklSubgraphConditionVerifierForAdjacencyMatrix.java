@@ -70,6 +70,11 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
     // This code is not for finding W_k,l subgraphs. It is for verifying W_k,l subgraphs.
     boolean isWklSubgraph(byte[][] adjacencyMatrix, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
         // n vertices in the graph, k bottleneck vertices, l medal vertices
+        // bottleneckOf[w] == -1 if w is outside the W_k,l subgraph
+        // bottleneckOf[w] == -2 if w is a bottleneck vertex
+        // bottleneckOf[w] == -3 if w is a medal vertex
+        // bottleneckOf[w] == u if w is a lanyard vertex in lanyard L_u,v
+        // medalOf[w] == v if w is a lanyard vertex in lanyard L_u,v
         if (bottleneckOf == null || medalOf == null) {
             System.out.println("An array is null");
             return false;
