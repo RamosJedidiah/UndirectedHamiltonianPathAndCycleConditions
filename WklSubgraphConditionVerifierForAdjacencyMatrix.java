@@ -1,7 +1,7 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-// This code is not for finding violations. It is for verifying violations.
+// This code is not for finding violations. It is for verifying given violations.
 
 public class WklSubgraphConditionVerifierForAdjacencyMatrix {
     public WklSubgraphConditionVerifierForAdjacencyMatrix() {
@@ -478,7 +478,7 @@ public class WklSubgraphConditionVerifierForAdjacencyMatrix {
                     // v is a medal vertex or lanyard vertex in the ith subgraph
                     for (j = 0; j < 3; j++) {
                         if (i != j && bottlenecksOf[j][v] != -1) {
-                            // v is in the jth subgraph not necessarily as a medal vertex or lanyard vertex
+                            // v is a bottleneck vertex or medal vertex or lanyard vertex in the jth subgraph
                             System.out.println(i + "th subgraph has a medal vertex or lanyard vertex " + v + " that is in the " + j + "th subgraph");
                             return false;
                         }
