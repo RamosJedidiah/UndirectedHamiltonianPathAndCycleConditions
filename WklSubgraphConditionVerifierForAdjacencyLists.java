@@ -1,7 +1,7 @@
 import java.util.LinkedList;
 import java.util.Queue;
 
-// This code is not for finding violations. It is for verifying violations.
+// This code is not for finding violations. It is for verifying given violations.
 
 public class WklSubgraphConditionVerifierForAdjacencyLists {
     public WklSubgraphConditionVerifierForAdjacencyLists() {
@@ -28,7 +28,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         System.out.println(violatesWkkSubgraphConditionForHamiltonianPaths(exampleAdjacencyLists, exampleN, exampleK, exampleL, exampleBottleneckOf, exampleMedalOf));
     }
 
-    boolean areValidAdjacencyLists(int[][] adjacencyLists, int n, boolean[] checklist) {
+    boolean areValidAdjacencyLists(int[][] adjacencyLists, int n) {
         if (n < 1) {
             System.out.println("n should not be less than 1");
             return false;
@@ -64,7 +64,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                     System.out.println("Vertex " + vertex + " has neighbor " + neighbor + " out of range 0 to " + (n - 1));
                     return false;
                 }
-                if (previousNeighbor > neighbor) {
+                if (previousNeighbor >= neighbor) {
                     System.out.println("Adjacency list of vertex " + vertex + " is unsorted");
                     return false;
                 }
@@ -72,15 +72,6 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                 transposed[neighbor].add(vertex);
                 // Update the previous neighbor in the adjacency list
                 previousNeighbor = neighbor;
-                if (checklist[neighbor]) {
-                    System.out.println("Vertex " + vertex + " has duplicate neighbor " + neighbor);
-                    return false;
-                }
-                checklist[neighbor] = true;
-            }
-            // Clear checklist
-            for (int neighbor : adjacencyList) {
-                checklist[neighbor] = false;
             }
         }
         // Ensure the graph is symmetric
@@ -363,8 +354,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
     // This code is contributed by Aakash Hasija
 
     boolean violatesWklSubgraphCondition(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf, int c) {
-        boolean[] visited = new boolean[n];
-        if (!areValidAdjacencyLists(adjacencyLists, n, visited)) {
+        if (!areValidAdjacencyLists(adjacencyLists, n)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
@@ -378,6 +368,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         }
         // Otherwise, k - l >= 1 - c
         // Mark all vertices in the W_k,l subgraph so that breadth-first search must find paths outside the W_k,l subgraph
+        boolean[] visited = new boolean[n];
         int i;
         for (i = 0; i < n; i++) {
             if (bottleneckOf[i] != -1) {
@@ -411,8 +402,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             System.out.println("Checking only accounts for W_k,k subgraphs");
             return false;
         }
-        boolean[] isExternalBCC = new boolean[n];
-        if (!areValidAdjacencyLists(adjacencyLists, n, isExternalBCC)) {
+        if (!areValidAdjacencyLists(adjacencyLists, n)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
@@ -422,6 +412,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
         }
         // Get biconnected components
         int[][] BCCs = new int[n][];
+        boolean[] isExternalBCC = new boolean[n];
         int BCCcount = getBiconnectedComponents(adjacencyLists, n, BCCs, isExternalBCC);
         // Mark biconnected components not contained in the subgraph, intersecting with the subgraph, and biconnected component indices of each vertex
         int[] BCC;
@@ -496,8 +487,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
     }
 
     boolean has3W11Subgraphs(int[][] adjacencyLists, int n, int[] bottlenecks1of, int[] bottlenecks2of, int[] bottlenecks3of, int[] medals1of, int[] medals2of, int[] medals3of) {
-        boolean[] WklChecklist = new boolean[n];
-        if (!areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
+        if (!areValidAdjacencyLists(adjacencyLists, n)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
@@ -518,7 +508,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                     // v is a medal vertex or lanyard vertex in the ith subgraph
                     for (j = 0; j < 3; j++) {
                         if (i != j && bottlenecksOf[j][v] != -1) {
-                            // v is in the jth subgraph not necessarily as a medal vertex or lanyard vertex
+                            // v is a bottleneck vertex or medal vertex or lanyard vertex in the jth subgraph
                             System.out.println(i + "th subgraph has a medal vertex or lanyard vertex " + v + " that is in the " + j + "th subgraph");
                             return false;
                         }
@@ -535,8 +525,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
     }
 
     boolean hasW11SubgraphAndVerticesOutside(int[][] adjacencyLists, int n, int[] bottleneckOf, int[] medalOf) {
-        boolean[] WklChecklist = new boolean[n];
-        if (!areValidAdjacencyLists(adjacencyLists, n, WklChecklist)) {
+        if (!areValidAdjacencyLists(adjacencyLists, n)) {
             System.out.println("Invalid adjacency lists");
             return false;
         }
