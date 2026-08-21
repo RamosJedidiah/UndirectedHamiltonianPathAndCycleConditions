@@ -41,19 +41,18 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             System.out.println("There are less than " + n + " adjacency lists");
             return false;
         }
-        // Transpose the graph to check symmetry
-        LinkedList<Integer>[] transposed = new LinkedList[n];
-        int vertex, previousNeighbor, neighborIndex;
+        int vertex, previousNeighbor;
+        int[] adjacencyList, neighborAdjacencyList;
         for (vertex = 0; vertex < n; vertex++) {
-            transposed[vertex] = new LinkedList<>();
-        }
-        int[] adjacencyList;
-        for (vertex = 0; vertex < n; vertex++) {
-            adjacencyList = adjacencyLists[vertex];
-            if (adjacencyList == null) {
+            if (adjacencyLists[vertex] == null) {
                 // Invalid input
                 return false;
             }
+        }
+        // Ensure the graph is symmetric
+        int[] pointers = new int[n];
+        for (vertex = 0; vertex < n; vertex++) {
+            adjacencyList = adjacencyLists[vertex];
             previousNeighbor = -1; // Previous neighbor in the adjacency list
             for (int neighbor : adjacencyList) {
                 if (vertex == neighbor) {
@@ -68,35 +67,24 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
                     System.out.println("Adjacency list of vertex " + vertex + " is unsorted");
                     return false;
                 }
-                // For edge (u, v), add edge (v, u) in the transposed graph
-                transposed[neighbor].add(vertex);
-                // Update the previous neighbor in the adjacency list
-                previousNeighbor = neighbor;
-            }
-        }
-        // Ensure the graph is symmetric
-        LinkedList<Integer> transposedAdjacencyList;
-        for (vertex = 0; vertex < n; vertex++) {
-            adjacencyList = adjacencyLists[vertex];
-            transposedAdjacencyList = transposed[vertex];
-            if (adjacencyList.length != transposedAdjacencyList.size()) {
-                System.out.println("The graph is asymmetric");
-                return false;
-            }
-            neighborIndex = 0;
-            for (int neighbor : transposedAdjacencyList) {
-                if (adjacencyList[neighborIndex] != neighbor) {
-                    System.out.println("The graph is asymmetric");
+                neighborAdjacencyList = adjacencyLists[neighbor];
+                // Increment neighbor's pointer while less than degree and pointer in neighbor's adjacency list is less than vertex
+                while (pointers[neighbor] < neighborAdjacencyList.length && neighborAdjacencyList[pointers[neighbor]] < vertex) {
+                    pointers[neighbor]++;
+                }
+                // (u, v) has no (v, u) if pointer is beyond neighbor's degree and pointer in neighbor's adjacency list is not vertex
+                if (pointers[neighbor] == neighborAdjacencyList.length || neighborAdjacencyList[pointers[neighbor]] != vertex) {
                     return false;
                 }
-                neighborIndex++;
+                // Update the previous neighbor in the adjacency list
+                previousNeighbor = neighbor;
             }
         }
         // Adjacency lists represent a valid graph
         return true;
     }
 
-    // This code is not for finding W_k,l subgraphs. It is for verifying W_k,l subgraphs.
+    // This code is not for finding W_k,l subgraphs. It is for verifying given W_k,l subgraphs.
     boolean isWklSubgraph(int[][] adjacencyLists, int n, int k, int l, int[] bottleneckOf, int[] medalOf) {
         // n vertices in the graph, k bottleneck vertices, l medal vertices
         // bottleneckOf[w] == -1 if w is outside the W_k,l subgraph
