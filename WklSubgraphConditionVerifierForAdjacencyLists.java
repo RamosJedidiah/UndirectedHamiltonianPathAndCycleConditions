@@ -42,7 +42,6 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             return false;
         }
         int vertex, previousNeighbor;
-        int[] adjacencyList, neighborAdjacencyList;
         for (vertex = 0; vertex < n; vertex++) {
             if (adjacencyLists[vertex] == null) {
                 // Invalid input
@@ -50,6 +49,7 @@ public class WklSubgraphConditionVerifierForAdjacencyLists {
             }
         }
         // Ensure the graph is symmetric
+        int[] adjacencyList, neighborAdjacencyList;
         int[] pointers = new int[n];
         for (vertex = 0; vertex < n; vertex++) {
             adjacencyList = adjacencyLists[vertex];
